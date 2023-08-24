@@ -1,5 +1,4 @@
-
-def _steps(ctx):
+def _run_all(ctx):
     executable = ctx.actions.declare_file(ctx.label.name + ".sh")
     cmd = ""
     runfiles = []
@@ -16,8 +15,8 @@ def _steps(ctx):
             runfiles = ctx.runfiles(runfiles)
         )]
 
-steps = rule(
-    _steps,
+run_all = rule(
+    _run_all,
     attrs = {
         "steps": attr.label_list(),
     },
