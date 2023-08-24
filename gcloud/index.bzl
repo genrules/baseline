@@ -49,7 +49,12 @@ def gcloud_auth_activate_refresh_token(name, account, token):
     )
 
 def gcloud_auth(name):
-    gcloud_auth_activate_refresh_token(name, "token", "$CLOUDSDK_AUTH_REFRESH_TOKEN")
+    run_if(
+        name = name,
+        not_empty = "$CLOUDSDK_AUTH_REFRESH_TOKEN",
+        then = ":"+name+"_refresh",
+    )
+    gcloud_auth_activate_refresh_token(name+"_refresh", "token", "$CLOUDSDK_AUTH_REFRESH_TOKEN")
 
 def gcloud_auth_print_access_token(name, out):
     gcloud(name, "auth print-access-token > {out}".format(out=out))
