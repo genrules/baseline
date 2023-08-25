@@ -52,7 +52,7 @@ def gcloud_auth(name):
     run_if(
         name = name,
         not_empty = "$CLOUDSDK_AUTH_REFRESH_TOKEN",
-        then = ":"+name+"_refresh",
+        then_run = ":"+name+"_refresh",
     )
     gcloud_auth_activate_refresh_token(name+"_refresh", "token", "$CLOUDSDK_AUTH_REFRESH_TOKEN")
 
