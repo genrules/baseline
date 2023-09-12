@@ -1,15 +1,11 @@
 def _run_if(ctx):
     executable = ctx.actions.declare_file(ctx.label.name + ".sh")
     cmd = ""
-    if ctx.attr.not_empty:
+    if ctx.attr.not_empty: # todo support else
         cmd = """
             if [ -n "{c}" ]
             then
                 bash {t}
-            elif [ -z "{e}" ]
-            then
-                :
-                bash {e}
             fi
         """.format(
             c = ctx.attr.not_empty, 
