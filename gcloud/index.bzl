@@ -42,19 +42,5 @@ def gcloud_services_enable(name, service, project):
     )
     gcloud(name, command)
 
-def gcloud_auth_activate_refresh_token(name, account, token):
-    gcloud(
-        name=name,
-        command="auth activate-refresh-token {account} {token}".format(account=account, token=token),
-    )
-
-def gcloud_auth(name):
-    run_if(
-        name = name,
-        not_empty = "$CLOUDSDK_AUTH_REFRESH_TOKEN",
-        then_run = ":"+name+"_refresh",
-    )
-    gcloud_auth_activate_refresh_token(name+"_refresh", "token", "$CLOUDSDK_AUTH_REFRESH_TOKEN")
-
 def gcloud_auth_print_access_token(name, out):
     gcloud(name, "auth print-access-token > {out}".format(out=out))
