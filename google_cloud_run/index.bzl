@@ -13,6 +13,7 @@ def deploy(
     password = "",
     repository = "",
     project = "",
+    service = "",
     allow_unauthenticated = True,
     ):
     run_all(
@@ -54,7 +55,7 @@ def deploy(
 
     gcloud_run_deploy(
         name = "{name}_deploy_image".format(name=name),
-        service = "{name}".format(name=name),
+        service = "{service}".format(service=service if service else name.replace("_", "-")),
         image = "gcr.io/{project}/{repository}:latest".format(
             repository=repository if repository else name,
             project = project if project else "$GCP_PROJECT"),
