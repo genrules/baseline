@@ -7,7 +7,7 @@ def _run(ctx):
             cmd = "$(tool) " + cmd
         cmd = cmd.replace("$(tool)", ctx.attr.tool.files.to_list().pop().path)
         tool_deps = ctx.attr.tool.files
-    cmd = "ls && " + ctx.expand_location(cmd)
+    cmd = ctx.expand_location(cmd)
     files = depset([executable])
     if ctx.attr.compile:
         cmd = cmd.replace("$<", "$1").replace("$@", "$2")
@@ -23,8 +23,6 @@ def _run(ctx):
         cmd = cmd.replace("$@", "$BUILD_WORKSPACE_DIRECTORY/"+executable.path)
         ctx.actions.write(executable, cmd, is_executable=True)
         files = depset([executable], transitive = [tool_deps] + [dep.files for dep in ctx.attr.deps])
-
-    print(cmd)
 
     return [DefaultInfo(
             files = files,

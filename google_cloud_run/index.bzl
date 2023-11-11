@@ -19,17 +19,31 @@ def deploy(
     allow_unauthenticated = True,
     base_image = "debian",
     ):
-    run_all(
-        name=name,
-        steps = [
-            ":{name}_access_token".format(name=name),
-            ":{name}_gcr_login".format(name=name),
-            # ":{name}_push_image".format(name=name),
+
+    steps = [
+        ":{name}_access_token".format(name=name),
+        ":{name}_gcr_login".format(name=name),
+    ]
+
+    if target:
+        steps = steps + [
+            ":{name}_push_image".format(name=name),
+        ]
+
+    if binary:
+        steps = steps + [
             ":{name}_append".format(name=name),
             ":{name}_mutate".format(name=name),
-            ":{name}_enable_cloud_run".format(name=name),
-            ":{name}_deploy_image".format(name=name),
-        ],
+        ]
+
+    steps = steps + [
+        ":{name}_enable_cloud_run".format(name=name),
+        ":{name}_deploy_image".format(name=name),
+    ]
+
+    run_all(
+        name=name,
+        steps = steps,
     )
 
     gcloud_auth_print_access_token(
@@ -52,7 +66,7 @@ def deploy(
     if target == "" and binary == "":
         print("Either target or binary is required")
 
-    if image:
+    if target:
         crane_push(
             name = "{name}_push_image".format(name=name),
             target = "{target}.tar".format(target=target),
