@@ -15,12 +15,13 @@ def crane_download():
     )
 
 
-def crane(name, command, deps=[]):
+def crane(name, command, deps=[], compile=False):
     run(
         name=name,
         tool="@crane//:crane",
         command=command,
         deps=deps,
+        compile=compile,
     )
 
 
@@ -30,8 +31,24 @@ def crane_auth_login(name, registry, user, password):
     )
     crane(name, command)
 
-
 def crane_push(name, target, image):
     label = native.package_relative_label(target)
     command = "push $(rootpath {target}) {image}".format(target=label, image=image)
     crane(name, command, [label])
+
+def crane_append(name, tar, base, image):
+    crane(
+        name = name,
+        # command = "append -f $< -b gcr.io/distroless/static-debian11 -t go_image -o $@",
+        command = "append -f $< -b {base} -t {image}".format(base=base, image=image),
+        # compile = True,
+        deps = [tar],
+    )
+
+def crane_mutate(name, cmd, image):
+    crane(
+        name = name,
+        command = "mutate -a --cmd={cmd} {image}".format(cmd=cmd, image=image),
+        # command = "mutate -a --cmd=./server/server_/server -o $@ $<",
+        # compile = True,
+    )
