@@ -48,7 +48,7 @@ def crane_append(name, tar, base, image):
 def crane_mutate(name, cmd, image):
     crane(
         name = name,
-        command = "mutate -a --cmd={cmd} {image}".format(cmd=cmd, image=image),
+        command = "mutate --cmd={cmd} -t {image} {image} ".format(cmd=cmd, image=image),
         # command = "mutate -a --cmd=./server/server_/server -o $@ $<",
         # compile = True,
     )

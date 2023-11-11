@@ -75,7 +75,7 @@ def deploy(
 
         crane_mutate(
             name = "{name}_mutate".format(name=name),
-            cmd = "./server/_server/server",
+            cmd = "./server/server_/server",
             image = image,
         )
 
