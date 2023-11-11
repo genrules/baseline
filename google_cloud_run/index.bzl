@@ -50,7 +50,7 @@ def deploy(
         )
 
     if target == "" and binary == "":
-        print("Either target or binary required")
+        print("Either target or binary is required")
 
     if image:
         crane_push(

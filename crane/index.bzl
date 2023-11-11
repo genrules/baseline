@@ -39,9 +39,7 @@ def crane_push(name, target, image):
 def crane_append(name, tar, base, image):
     crane(
         name = name,
-        # command = "append -f $< -b gcr.io/distroless/static-debian11 -t go_image -o $@",
         command = "append -f $< -b {base} -t {image}".format(base=base, image=image),
-        # compile = True,
         deps = [tar],
     )
 
@@ -49,6 +47,4 @@ def crane_mutate(name, cmd, image):
     crane(
         name = name,
         command = "mutate --cmd={cmd} -t {image} {image} ".format(cmd=cmd, image=image),
-        # command = "mutate -a --cmd=./server/server_/server -o $@ $<",
-        # compile = True,
     )
