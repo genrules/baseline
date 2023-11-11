@@ -15,12 +15,13 @@ def crane_download():
     )
 
 
-def crane(name, command, deps=[]):
+def crane(name, command, deps=[], compile=False):
     run(
         name=name,
         tool="@crane//:crane",
         command=command,
         deps=deps,
+        compile=compile,
     )
 
 
@@ -30,8 +31,20 @@ def crane_auth_login(name, registry, user, password):
     )
     crane(name, command)
 
-
 def crane_push(name, target, image):
     label = native.package_relative_label(target)
     command = "push $(rootpath {target}) {image}".format(target=label, image=image)
     crane(name, command, [label])
+
+def crane_append(name, tar, base, image):
+    crane(
+        name = name,
+        command = "append -f $< -b {base} -t {image}".format(base=base, image=image),
+        deps = [tar],
+    )
+
+def crane_mutate(name, cmd, image):
+    crane(
+        name = name,
+        command = "mutate --cmd={cmd} -t {image} {image} ".format(cmd=cmd, image=image),
+    )
