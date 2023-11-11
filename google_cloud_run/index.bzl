@@ -89,8 +89,9 @@ def deploy(
 
         crane_mutate(
             name = "{name}_mutate".format(name=name),
-            cmd = "./{package}/{name}_/{name}".format(package=native.package_relative_label(binary).package, name=native.package_relative_label(binary).name),
+            cmd = "./$(rootpath {binary})".format(binary=binary),
             image = image,
+            deps = [binary],
         )
 
     gcloud_services_enable(

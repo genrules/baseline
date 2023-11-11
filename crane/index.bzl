@@ -43,8 +43,9 @@ def crane_append(name, tar, base, image):
         deps = [tar],
     )
 
-def crane_mutate(name, cmd, image):
+def crane_mutate(name, cmd, image, deps=[]):
     crane(
         name = name,
         command = "mutate --cmd={cmd} -t {image} {image} ".format(cmd=cmd, image=image),
+        deps = deps,
     )
