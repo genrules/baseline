@@ -77,7 +77,7 @@ def deploy(
         pkg_tar(
             name = "{name}_tar".format(name=name),
             srcs = [binary],
-            package_dir = "/server",
+            package_dir = "/"+native.package_relative_label(binary).package,
         )
 
         crane_append(
@@ -89,7 +89,7 @@ def deploy(
 
         crane_mutate(
             name = "{name}_mutate".format(name=name),
-            cmd = "./server/server_/server",
+            cmd = "./{package}/{name}_/{name}".format(package=native.package_relative_label(binary).package, name=native.package_relative_label(binary).name),
             image = image,
         )
 
