@@ -21,7 +21,7 @@ configure = module_extension(
 def crane(name, command, deps=[], compile=False):
     run(
         name=name,
-        tool="@crane//:crane",
+        tool=Label("@crane//:crane"),
         command=command,
         deps=deps,
         compile=compile,

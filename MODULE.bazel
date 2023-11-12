@@ -1,3 +1,8 @@
 module(
     name = "genrules",
 )
+
+[use_repo(use_extension("//{0}:index.bzl".format(d), "configure"), d) for d in [
+    "crane", 
+    "gcloud"
+]]

@@ -22,7 +22,7 @@ configure = module_extension(
 def gcloud(name, command):
     run(
         name=name,
-        tool="@gcloud//:google-cloud-sdk/bin/gcloud",
+        tool=Label("@gcloud//:google-cloud-sdk/bin/gcloud"),
         command=command,
     )
 
