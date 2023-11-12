@@ -2,7 +2,7 @@ load("//gcloud:index.bzl", "gcloud_run_deploy", "gcloud_services_enable", "gclou
 load("//run_all:index.bzl", "run_all")
 load("//run_if:index.bzl", "run_if")
 load("//crane:index.bzl", "crane_auth_login", "crane_push", "crane_append", "crane_mutate")
-load("@bazel_tools//tools/build_defs/pkg:pkg.bzl", "pkg_tar")
+load("@rules_pkg//pkg:pkg.bzl", "pkg_tar")
 
 def deploy(
     name, 
@@ -78,6 +78,7 @@ def deploy(
             name = "{name}_tar".format(name=name),
             srcs = [binary],
             package_dir = "/"+native.package_relative_label(binary).package,
+            include_runfiles = True,
         )
 
         crane_append(
