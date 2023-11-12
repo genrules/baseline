@@ -1,7 +1,7 @@
 load("//run:index.bzl", "run")
 load("//download:index.bzl", "download")
 
-def crane_download():
+def crane_download(_ctx = None):
     download(
         name = "crane",
         urls = {
@@ -14,6 +14,9 @@ def crane_download():
         },
     )
 
+configure = module_extension(
+    implementation = crane_download,
+)
 
 def crane(name, command, deps=[], compile=False):
     run(

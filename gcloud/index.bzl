@@ -2,7 +2,7 @@ load("//run:index.bzl", "run")
 load("//run_if:index.bzl", "run_if")
 load("//download:index.bzl", "download")
 
-def gcloud_download():
+def gcloud_download(_ctx = None):
     download(
         name = "gcloud",
         urls = {
@@ -15,6 +15,9 @@ def gcloud_download():
         },
     )
 
+configure = module_extension(
+    implementation = gcloud_download,
+)
 
 def gcloud(name, command):
     run(
