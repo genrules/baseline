@@ -42,13 +42,13 @@ def crane_push(name, target, image):
 def crane_append(name, tar, base, image):
     crane(
         name = name,
-        command = "append -f $< -b {base} -t {image}".format(base=base, image=image),
+        command = "append -f $(SRCS_COMMA) -b {base} -t {image}".format(base=base, image=image),
         deps = [tar],
     )
 
 def crane_mutate(name, cmd, image, deps=[]):
     crane(
         name = name,
-        command = "mutate --cmd={cmd} -t {image} {image} ".format(cmd=cmd, image=image),
+        command = "mutate --cmd=\"{cmd}\" -t {image} {image} ".format(cmd=cmd, image=image),
         deps = deps,
     )

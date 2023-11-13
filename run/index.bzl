@@ -10,16 +10,22 @@ def _run(ctx):
     cmd = ctx.expand_location(cmd)
     files = depset([executable])
     if ctx.attr.compile:
-        cmd = cmd.replace("$<", "$1").replace("$@", "$2")
+        cmd = cmd.replace("$<", "$1").replace("$@", "$2").replace("$(SRCS)", "$3")
         ctx.actions.run_shell(
             inputs=ctx.attr.deps[0].files.to_list() + tool_deps.to_list(),
             outputs=[executable], 
-            arguments = [ctx.attr.deps[0].files.to_list()[0].path, executable.path],
+            arguments = [
+                ctx.attr.deps[0].files.to_list()[0].path, 
+                executable.path, 
+                " ".join([f.path for f in ctx.attr.deps[0].files.to_list()])],
             command = cmd,
         )
     else:
         if len(ctx.attr.deps) > 0:
             cmd = cmd.replace("$<", "$BUILD_WORKSPACE_DIRECTORY/"+ctx.attr.deps[0].files.to_list()[0].path)
+            cmd = cmd.replace("$(SRCS)", " ".join(["$BUILD_WORKSPACE_DIRECTORY/"+f.path for f in ctx.attr.deps[0].files.to_list()]))
+            cmd = cmd.replace("$(SRCS_COMMA)", ",".join(["$BUILD_WORKSPACE_DIRECTORY/"+f.path for f in ctx.attr.deps[0].files.to_list()]))
+        
         cmd = cmd.replace("$@", "$BUILD_WORKSPACE_DIRECTORY/"+executable.path)
         ctx.actions.write(executable, cmd, is_executable=True)
         files = depset([executable], transitive = [tool_deps] + [dep.files for dep in ctx.attr.deps])

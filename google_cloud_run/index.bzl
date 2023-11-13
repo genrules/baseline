@@ -8,6 +8,8 @@ def deploy(
     name, 
     target = "",
     binary = "",
+    tar = "",
+    cmd = "",
     port = "8080", 
     region = "us-west1", 
     registry = "gcr.io",
@@ -30,7 +32,7 @@ def deploy(
             ":{name}_push_image".format(name=name),
         ]
 
-    if binary:
+    if binary or tar:
         steps = steps + [
             ":{name}_append".format(name=name),
             ":{name}_mutate".format(name=name),
@@ -63,8 +65,8 @@ def deploy(
             project = project if project else "$GCP_PROJECT"
         )
 
-    if target == "" and binary == "":
-        print("Either target or binary is required")
+    if target == "" and binary == "" and tar == "":
+        print("Either target, binary, or tar is required")
 
     if target:
         crane_push(
@@ -90,9 +92,26 @@ def deploy(
 
         crane_mutate(
             name = "{name}_mutate".format(name=name),
-            cmd = "./$(rootpath {binary})".format(binary=binary),
+            cmd = cmd if cmd else "./$(rootpath {binary})".format(binary=binary),
             image = image,
             deps = [binary],
+        )
+
+    if tar and not cmd:
+        print("If tar is set, cmd is also required.")
+
+    if tar:
+        crane_append(
+            name = "{name}_append".format(name=name),
+            tar = tar,
+            base = base_image,
+            image = image,
+        )
+
+        crane_mutate(
+            name = "{name}_mutate".format(name=name),
+            cmd = cmd,
+            image = image,
         )
 
     gcloud_services_enable(
