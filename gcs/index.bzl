@@ -3,10 +3,10 @@ load("//run:index.bzl", "run")
 load("//run_if:index.bzl", "run_if")
 load("//run_all:index.bzl", "run_all")
 
-def create_bucket(name, bucket_name):
+def create_bucket(name, bucket_name, project="$GCP_PROJECT"):
     gcloud(
         name = name,
-        command = "storage buckets create gs://{bucket_name}/ --uniform-bucket-level-access || true".format(bucket_name=bucket_name),
+        command = "storage buckets create gs://{bucket_name}/ --project={project} --uniform-bucket-level-access || true".format(bucket_name=bucket_name, project=project),
     )
 
 def upload(name, bucket_name, deps):

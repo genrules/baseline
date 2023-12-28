@@ -1,5 +1,4 @@
 load("//run:index.bzl", "run")
-load("//run_if:index.bzl", "run_if")
 load("//download:index.bzl", "download")
 
 def gcloud_download(_ctx = None):
