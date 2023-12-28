@@ -19,11 +19,12 @@ configure = module_extension(
     implementation = gcloud_download,
 )
 
-def gcloud(name, command):
+def gcloud(name, command, deps=[]):
     run(
         name=name,
         tool=Label("@gcloud//:google-cloud-sdk/bin/gcloud"),
         command=command,
+        deps=deps,
     )
 
 def gcloud_run_deploy(
