@@ -8,10 +8,15 @@ def _download(ctx):
     urls = ctx.attr.urls[os + arch]
     sha = ctx.attr.sha256[os + arch]
 
+    stripPrefix = ""
+    if ctx.attr.strip_prefix:
+        stripPrefix = ctx.attr.strip_prefix[os + arch]
+
     ctx.report_progress("downloading")
     ctx.download_and_extract(
         urls,
         sha256 = sha,
+        stripPrefix = stripPrefix,
     )
 
     ctx.file("WORKSPACE", """workspace(name = "{name}")""".format(name = ctx.name))
@@ -22,5 +27,6 @@ download = repository_rule(
     attrs = {
         "urls": attr.string_list_dict(),
         "sha256": attr.string_dict(),
+        "strip_prefix": attr.string_dict(),
     },
 )
