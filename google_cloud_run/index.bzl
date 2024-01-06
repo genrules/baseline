@@ -16,7 +16,6 @@ def deploy(
     username = "oauth2accesstoken",
     password = "",
     repository = "",
-    project = "$GCP_PROJECT",
     service = "",
     allow_unauthenticated = True,
     base_image = "debian",
@@ -62,7 +61,7 @@ def deploy(
 
     image = "gcr.io/{project}/{repository}:latest".format(
             repository=repository if repository else name,
-            project = project
+            project = "$($(tool) config get-value project)"
         )
 
     if target == "" and binary == "" and tar == "":
@@ -122,11 +121,8 @@ def deploy(
     gcloud_run_deploy(
         name = "{name}_deploy_image".format(name=name),
         service = "{service}".format(service=service if service else name.replace("_", "-")),
-        image = "gcr.io/{project}/{repository}:latest".format(
-            repository=repository if repository else name,
-            project = project),
+        image = image,
         port = port,
         region = region,
-        project = project,
         allow_unauthenticated = allow_unauthenticated,
     )

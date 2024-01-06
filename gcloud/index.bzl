@@ -82,10 +82,10 @@ def gcloud_entity(name, service, entity, options, flags="", format="", out="", i
 # Run
 
 def gcloud_run_deploy(
-    name, service, image, port, region, project, allow_unauthenticated
+    name, service, image, port, region, allow_unauthenticated
 ):
-    command = "run deploy {service} --image={image} --port={port} --region={region} --project={project}".format(
-        service=service, image=image, port=port, region=region, project=project
+    command = "run deploy {service} --image={image} --port={port} --region={region}".format(
+        service=service, image=image, port=port, region=region
     )
 
     if allow_unauthenticated:
@@ -95,11 +95,8 @@ def gcloud_run_deploy(
 
 # Services
 
-def gcloud_services_enable(name, service, project="$GCP_PROJECT"):
-    command = "services enable {service} --project={project}".format(
-        service=service, project=project
-    )
-    gcloud(name, command)
+def gcloud_services_enable(name, service):
+    gcloud(name, "services enable {service}".format(service=service))
 
 # Auth
 
