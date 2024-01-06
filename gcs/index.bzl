@@ -1,13 +1,10 @@
-load("//gcloud:index.bzl", "gcloud", "gcloud_load_balancer", "gcloud_dns", "gcloud_ssl")
+load("//gcloud:index.bzl", "gcloud", "gcloud_entity", "gcloud_load_balancer", "gcloud_dns", "gcloud_ssl")
 load("//run:index.bzl", "run")
 load("//run_if:index.bzl", "run_if")
 load("//run_all:index.bzl", "run_all")
 
-def create_bucket(name, bucket_name, project="$GCP_PROJECT"):
-    gcloud(
-        name = name,
-        command = "storage buckets create gs://{bucket_name}/ --project={project} --uniform-bucket-level-access || true".format(bucket_name=bucket_name, project=project),
-    )
+def bucket(name, bucket_name, project="$GCP_PROJECT"):
+    gcloud_entity(name, "storage", "buckets", "--uniform-bucket-level-access", "--project={project}".format(project=project), id="gs://{bucket_name}/".format(bucket_name=bucket_name))
 
 def upload(name, bucket_name, deps, delete = False, cache = "no-cache"):
     options = ""
@@ -35,7 +32,7 @@ def update_main_page(name, bucket_name, main_page="index.html"):
 
 def gcs_deploy(name, deps, bucket_name="$BUCKET_NAME", domain="", project="$GCP_PROJECT"):
     steps = [
-        ":{name}.create".format(name = name),
+        ":{name}.bucket.ensure_exists".format(name = name),
         ":{name}.upload".format(name = name),
         ":{name}.policy".format(name = name),
         ":{name}.update_main_page".format(name = name),
@@ -57,8 +54,8 @@ def gcs_deploy(name, deps, bucket_name="$BUCKET_NAME", domain="", project="$GCP_
         steps = steps,
     )
 
-    create_bucket(
-        name = "{name}.create".format(name = name),
+    bucket(
+        name = "{name}.bucket".format(name = name),
         bucket_name = bucket_name,
     )
 
