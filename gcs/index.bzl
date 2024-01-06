@@ -1,4 +1,4 @@
-load("//gcloud:index.bzl", "gcloud")
+load("//gcloud:index.bzl", "gcloud", "gcloud_load_balancer", "gcloud_dns", "gcloud_ssl")
 load("//run:index.bzl", "run")
 load("//run_if:index.bzl", "run_if")
 load("//run_all:index.bzl", "run_all")
@@ -9,10 +9,15 @@ def create_bucket(name, bucket_name, project="$GCP_PROJECT"):
         command = "storage buckets create gs://{bucket_name}/ --project={project} --uniform-bucket-level-access || true".format(bucket_name=bucket_name, project=project),
     )
 
-def upload(name, bucket_name, deps):
+def upload(name, bucket_name, deps, delete = False, cache = "no-cache"):
+    options = ""
+    if delete:
+        options += "--delete-unmatched-destination-objects "
+    if cache:
+        options += "--cache-control={cache} ".format(cache=cache)
     gcloud(
         name = name,
-        command = "storage cp -r $(SRCS) gs://{bucket_name}/".format(bucket_name=bucket_name),
+        command = "storage rsync --checksums-only --gzip-in-flight-all --recursive {options} $(SRCS) gs://{bucket_name}/".format(bucket_name=bucket_name, options=options),
         deps = deps,
     )
 
@@ -28,40 +33,70 @@ def update_main_page(name, bucket_name, main_page="index.html"):
         command = "storage buckets update gs://{bucket_name}/ --web-main-page-suffix={main_page}".format(bucket_name=bucket_name, main_page=main_page),
     )
 
-def gcs_deploy(name, bucket_name, deps):
+def gcs_deploy(name, deps, bucket_name="$BUCKET_NAME", domain="", project="$GCP_PROJECT"):
+    steps = [
+        ":{name}.create".format(name = name),
+        ":{name}.upload".format(name = name),
+        ":{name}.policy".format(name = name),
+        ":{name}.update_main_page".format(name = name),
+        ":{name}.balancer".format(name = name),
+    ]
+
+    if domain:
+        steps = steps + [
+            ":{name}.dns".format(name = name),
+            ":{name}.ssl".format(name = name),
+        ]
+
+    steps = steps + [
+        ":{name}.print".format(name = name),
+    ]
+
     run_all(
         name = name,
-        steps = [
-            ":{name}_create".format(name = name),
-            ":{name}_upload".format(name = name),
-            ":{name}_policy".format(name = name),
-            ":{name}_update_main_page".format(name = name),
-            ":{name}_print".format(name = name),
-        ],
+        steps = steps,
     )
 
     create_bucket(
-        name = "{name}_create".format(name = name),
+        name = "{name}.create".format(name = name),
         bucket_name = bucket_name,
     )
 
     upload(
-        name = "{name}_upload".format(name = name),
+        name = "{name}.upload".format(name = name),
         bucket_name = bucket_name,
         deps = deps,
     )
 
     add_policy(
-        name = "{name}_policy".format(name = name),
+        name = "{name}.policy".format(name = name),
         bucket_name = bucket_name,
     )
 
     update_main_page(
-        name = "{name}_update_main_page".format(name = name),
+        name = "{name}.update_main_page".format(name = name),
         bucket_name = bucket_name,
     )
 
+    gcloud_load_balancer(
+        name = "{name}.balancer".format(name = name),
+        bucket_name = bucket_name,
+        out = "~/{name}_ip".format(name = name),
+    )
+
+    gcloud_dns(
+        name = "{name}.dns".format(name = name),
+        ip="$(cat ~/{name}_ip)".format(name = name),
+        domain = domain,
+    )
+
+    gcloud_ssl(
+        name = "{name}.ssl".format(name = name),
+        domain = domain,
+        balancer = "{name}.balancer".format(name = name),
+    )
+
     run(
-        name = "{name}_print".format(name = name),
-        command = "echo https://storage.googleapis.com/{bucket_name}/index.html?revision=$(date +\\%s)".format(bucket_name = bucket_name),
+        name = "{name}.print".format(name = name),
+        command = "echo https://storage.googleapis.com/{bucket_name}/index.html?revision=$(date +\\%s) && cat ~/{name}_ip".format(name = name, bucket_name = bucket_name),
     )
