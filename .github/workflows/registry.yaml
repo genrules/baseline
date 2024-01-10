@@ -1,0 +1,77 @@
+name: "registry"
+
+on:
+  push:
+    tags:
+      - "*"
+
+jobs:
+  create-release:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout genrules
+        uses: actions/checkout@v3
+        with:
+          path: genrules
+
+      - name: Checkout registry
+        uses: actions/checkout@v3
+        with:
+          repository: "registrybuild/registry.build"
+          ref: "main"
+          token: ${{ secrets.REGISTRY_TOKEN }}
+          path: registrybuild
+
+      - name: Commit
+        run: |
+          cd "$GITHUB_WORKSPACE"/registrybuild
+          git config --local user.email '${{ github.event.head_commit.author.email }}'
+          git config --local user.name '${{ github.event.head_commit.author.name }}'
+
+          curl -o archive.zip https://github.com/genrules/genrules/archive/$GITHUB_SHA.zip
+          ARCHIVE_SHA=$(openssl dgst -sha256 -binary archive.zip | openssl base64 -A | sed 's/^/sha256-/')
+
+          mkdir -p website/static/modules/genrules/$GITHUB_REF/
+
+          cat <<EOF > website/static/modules/genrules/$GITHUB_REF/MODULE.bazel
+          module(
+              name = "genrules",
+              version = "$GITHUB_REF",
+              compatibility_level = 1,
+          )
+          bazel_dep(name = "rules_pkg", version = "0.9.1")
+          [use_repo(use_extension("//{0}:index.bzl".format(d), "configure"), d) for d in [
+            "crane", 
+            "gcloud",
+            "nodejs",
+            "terraform",
+          ]]
+          EOF
+
+          cat <<EOF > website/static/modules/genrules/$GITHUB_REF/source.json
+          {
+            "url": "https://github.com/genrules/genrules/archive/$GITHUB_SHA.zip",
+            "integrity": "$ARCHIVE_SHA",
+            "strip_prefix": "genrules-$GITHUB_SHA",
+            "patch_strip": 0
+          }
+          EOF
+
+          jq '.versions |= . + "$GITHUB_REF"' website/static/modules/genrules/metadata.json | sponge website/static/modules/genrules/metadata.json
+
+          git add website/static/modules/genrules/$GITHUB_REF/MODULE.bazel
+          git add website/static/modules/genrules/$GITHUB_REF/source.json
+          git add website/static/modules/genrules/metadata.json
+
+          cat <<EOF > message.txt
+          Updating genrules to $GITHUB_REF
+          EOF
+          git commit -F message.txt -a
+
+      - name: Push changes
+        uses: ad-m/github-push-action@v0.6.0
+        with:
+          directory: registrybuild
+          repository: registrybuild/registry.build
+          github_token: ${{ secrets.REGISTRY_TOKEN }}
+          branch: main
