@@ -31,13 +31,14 @@ jobs:
 
           curl -o archive.zip https://github.com/genrules/genrules/archive/$GITHUB_SHA.zip
           ARCHIVE_SHA=$(openssl dgst -sha256 -binary archive.zip | openssl base64 -A | sed 's/^/sha256-/')
+          GITHUB_TAG=$(basename $GITHUB_REF)
 
-          mkdir -p website/static/modules/genrules/$GITHUB_REF/
+          mkdir -p website/static/modules/genrules/$GITHUB_TAG/
 
-          cat <<EOF > website/static/modules/genrules/$GITHUB_REF/MODULE.bazel
+          cat <<EOF > website/static/modules/genrules/$GITHUB_TAG/MODULE.bazel
           module(
               name = "genrules",
-              version = "$GITHUB_REF",
+              version = "$GITHUB_TAG",
               compatibility_level = 1,
           )
           bazel_dep(name = "rules_pkg", version = "0.9.1")
@@ -49,7 +50,7 @@ jobs:
           ]]
           EOF
 
-          cat <<EOF > website/static/modules/genrules/$GITHUB_REF/source.json
+          cat <<EOF > website/static/modules/genrules/$GITHUB_TAG/source.json
           {
             "url": "https://github.com/genrules/genrules/archive/$GITHUB_SHA.zip",
             "integrity": "$ARCHIVE_SHA",
@@ -58,15 +59,15 @@ jobs:
           }
           EOF
 
-          jq ".versions[.versions | length] |= . + \"$GITHUB_REF\"" website/static/modules/genrules/metadata.json > tmp.json
+          jq ".versions[.versions | length] |= . + \"$GITHUB_TAG\"" website/static/modules/genrules/metadata.json > tmp.json
           mv tmp.json website/static/modules/genrules/metadata.json
 
-          git add website/static/modules/genrules/$GITHUB_REF/MODULE.bazel
-          git add website/static/modules/genrules/$GITHUB_REF/source.json
+          git add website/static/modules/genrules/$GITHUB_TAG/MODULE.bazel
+          git add website/static/modules/genrules/$GITHUB_TAG/source.json
           git add website/static/modules/genrules/metadata.json
 
           cat <<EOF > message.txt
-          Updating genrules to $GITHUB_REF
+          Updating genrules to $GITHUB_TAG
           EOF
           git commit -F message.txt -a
 
