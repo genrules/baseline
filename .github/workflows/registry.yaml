@@ -58,7 +58,8 @@ jobs:
           }
           EOF
 
-          jq '.versions |= . + "$GITHUB_REF"' website/static/modules/genrules/metadata.json | sponge website/static/modules/genrules/metadata.json
+          jq ".versions[.versions | length] |= . + \"$GITHUB_REF\"" website/static/modules/genrules/metadata.json > tmp.json
+          mv tmp.json website/static/modules/genrules/metadata.json
 
           git add website/static/modules/genrules/$GITHUB_REF/MODULE.bazel
           git add website/static/modules/genrules/$GITHUB_REF/source.json
