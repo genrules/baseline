@@ -22,6 +22,16 @@ def _run_if(ctx):
             s = _maybe_path(ctx.attr.fails), 
             t = _maybe_path(ctx.attr.then_run),
         )
+    if ctx.attr.equals:
+        cmd = """
+            if [ $(bash {e}) = "{v}" ]
+            then
+                bash {t}
+            fi
+        """.format(
+            e = _maybe_path(ctx.attr.equals), 
+            t = _maybe_path(ctx.attr.then_run),
+            v = ctx.attr.value)
     cmd = ctx.expand_location(cmd)
     ctx.actions.write(executable, cmd, is_executable=True)
     return [DefaultInfo(
@@ -36,6 +46,7 @@ def _run_if(ctx):
                 _maybe_file_list(ctx.attr.then_run)+
                 _maybe_file_list(ctx.attr.else_run)+
                 _maybe_file_list(ctx.attr.fails)+
+                _maybe_file_list(ctx.attr.equals)+
                 _maybe_file_list(ctx.attr.succeeds))
         )]
 
@@ -46,7 +57,7 @@ def _maybe_files(attribute):
     return attribute.files if attribute else depset()
 
 def _maybe_file_list(attribute):
-    return attribute.files.to_list() if attribute else []
+    return attribute.files.to_list() + attribute[DefaultInfo].default_runfiles.files.to_list() if attribute else []
 
 run_if = rule(
     _run_if,
@@ -54,6 +65,8 @@ run_if = rule(
         "not_empty": attr.string(),
         "succeeds": attr.label(),
         "fails": attr.label(),
+        "equals": attr.label(),
+        "value": attr.string(),
         "then_run": attr.label(),
         "else_run": attr.label(),
     },
