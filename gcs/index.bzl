@@ -1,4 +1,4 @@
-load("//gcloud:index.bzl", "gcloud", "gcloud_entity", "gcloud_load_balancer", "gcloud_dns", "gcloud_ssl")
+load("//gcloud:index.bzl", "gcloud", "gcloud_entity", "gcloud_load_balancer", "gcloud_dns", "gcloud_ssl", "gcloud_domains_registrations")
 load("//run:index.bzl", "run")
 load("//run_if:index.bzl", "run_if")
 load("//run_all:index.bzl", "run_all")
@@ -30,7 +30,7 @@ def update_main_page(name, bucket_name, main_page="index.html"):
         command = "storage buckets update gs://{bucket_name}/ --web-main-page-suffix={main_page}".format(bucket_name=bucket_name, main_page=main_page),
     )
 
-def gcs_deploy(name, deps, bucket_name, domain=""):
+def gcs_deploy(name, deps, bucket_name, domain="", domain_price="", domain_email="", domain_phone="", domain_country="", domain_zip="", domain_state="", domain_city="", domain_address="", domain_contact=""):
     steps = [
         ":{name}.bucket.ensure_exists".format(name = name),
         ":{name}.upload".format(name = name),
@@ -43,6 +43,11 @@ def gcs_deploy(name, deps, bucket_name, domain=""):
         steps = steps + [
             ":{name}.dns".format(name = name),
             ":{name}.ssl".format(name = name),
+        ]
+
+    if domain_price:
+        steps = steps + [
+            ":{name}.domain.ensure_exists".format(name = name),
         ]
 
     steps = steps + [
@@ -85,6 +90,21 @@ def gcs_deploy(name, deps, bucket_name, domain=""):
         name = "{name}.dns".format(name = name),
         ip="$(cat ~/{name}_ip)".format(name = name),
         domain = domain,
+    )
+
+    gcloud_domains_registrations(
+        name = "{name}.domain".format(name = name),
+        zone = "{name}.dns.zone".format(name = name),
+        domain = domain,
+        price = domain_price, 
+        email = domain_email, 
+        phone = domain_phone, 
+        country = domain_country, 
+        zip = domain_zip, 
+        state = domain_state, 
+        city = domain_city, 
+        address = domain_address, 
+        contact = domain_contact
     )
 
     gcloud_ssl(

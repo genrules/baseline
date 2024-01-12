@@ -141,7 +141,7 @@ def gcloud_dns_record_sets(name, domain, zone, ip, ttl="30", type="A"):
 
 # Domains
 
-def gcloud_domains_registrations(name, domain, zone="", privacy="redacted-contact-data", price="12.00 USD", email="", phone="", country="", zip="", state="", city="", address="", contact="", validate=False):
+def gcloud_domains_registrations(name, domain, zone, price, email, phone, country, zip, state, city, address, contact, privacy="redacted-contact-data", validate=False):
     contacts = """
 allContacts:
   email: '{email}'
@@ -186,7 +186,6 @@ def gcloud_dns(name, domain, ip):
             ":{name}.zone.ensure_exists".format(name = name),
             ":{name}.record.ensure_exists".format(name = name),        
             ":{name}.enable_domains".format(name = name),
-            ":{name}.domain.ensure_exists".format(name = name),        
         ],
     )
 
@@ -210,12 +209,6 @@ def gcloud_dns(name, domain, ip):
     gcloud_services_enable(
         name = "{name}.enable_domains".format(name=name),
         service = "domains.googleapis.com",
-    )
-
-    gcloud_domains_registrations(
-        name = "{name}.domain".format(name = name),
-        zone = "{name}.zone".format(name = name),
-        domain = domain,
     )
 
 def gcloud_ssl(name, domain, balancer):
