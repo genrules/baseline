@@ -29,7 +29,7 @@ def terraform(name, command="", srcs=[], deps=[], vars={}, state=True, backend_b
     for v in vars:
         varFlags += " -var=\"{key}={value}\"".format(key=v, value=vars[v])
     
-    prefix = "ln -sf **/*.tf . && $(tool) init -migrate-state {flags} && $(tool) ".format(flags=flags)
+    prefix = "ln -sf **/*.tf . && rm -f \\*.tf && $(tool) init -migrate-state {flags} && $(tool) ".format(flags=flags)
     if command:
         run(
             name=name,
