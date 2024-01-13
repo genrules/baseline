@@ -17,6 +17,9 @@ def _run(ctx):
 
     if ctx.attr.directory:
         cmd = "export PACKAGEDIR={directory} && cd $PACKAGEDIR && ".format(directory=ctx.attr.directory) + cmd
+    for t in ctx.attr.tools:
+        cmd = "export PATH=$PATH:$ROOTDIR/$(dirname "+t.files.to_list().pop().path+") && " + cmd
+
     cmd = "export PATH=$PATH:. && " + cmd
     cmd = "export ROOTDIR=$(pwd) && " + cmd
     cmd = cmd + " && cd $ROOTDIR"
@@ -64,6 +67,9 @@ run = rule(
     _run,
     attrs = {
         "tool": attr.label(
+            allow_files = True,
+        ),
+        "tools": attr.label_list(
             allow_files = True,
         ),
         "command": attr.string(),
