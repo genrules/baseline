@@ -15,8 +15,10 @@ def _run(ctx):
     cmd = ctx.expand_location(cmd)
     files = depset([output])
 
+    input_directory = "."
     if ctx.attr.directory:
         cmd = "export PACKAGEDIR={directory} && cd $PACKAGEDIR && ".format(directory=ctx.attr.directory) + cmd
+        input_directory = "$PACKAGEDIR"
     for t in ctx.attr.tools:
         cmd = "export PATH=$PATH:$ROOTDIR/$(dirname "+t.files.to_list().pop().path+") && " + cmd
 
@@ -24,10 +26,22 @@ def _run(ctx):
     cmd = "export ROOTDIR=$(pwd) && " + cmd
     cmd = cmd + " && cd $ROOTDIR"
 
+
+    output_directory = "."
+    if not ctx.attr.compile:
+        output_directory = "$BUILD_WORKSPACE_DIRECTORY"
+
+    if len(ctx.attr.deps) > 0:
+        cmd = cmd.replace("$<", output_directory+"/"+ctx.attr.deps[0].files.to_list()[0].path)
+        cmd = cmd.replace("$(SRCS)", " ".join([output_directory+"/"+f.path for f in ctx.attr.deps[0].files.to_list()]))
+        cmd = cmd.replace("$(SRCS_COMMA)", ",".join([output_directory+"/"+f.path for f in ctx.attr.deps[0].files.to_list()]))
+    
+    cmd = cmd.replace("$@", output_directory+"/"+output.path)
+
     if ctx.attr.compile:
         cmd = cmd.replace("$<", "$1").replace("$@", "$2")
         if ctx.attr.output_directory:
-            cmd = cmd + " && mv $PACKAGEDIR/"+ctx.attr.output_directory+"/* $2"
+            cmd = cmd + " && mv "+input_directory+"/"+ctx.attr.output_directory+"/* $2"
         deps = []
         if len(ctx.attr.deps) > 0:
             deps = ctx.attr.deps[0].files.to_list()
@@ -48,12 +62,6 @@ def _run(ctx):
             execution_requirements = execution_requirements,
         )
     else:
-        if len(ctx.attr.deps) > 0:
-            cmd = cmd.replace("$<", "$BUILD_WORKSPACE_DIRECTORY/"+ctx.attr.deps[0].files.to_list()[0].path)
-            cmd = cmd.replace("$(SRCS)", " ".join(["$BUILD_WORKSPACE_DIRECTORY/"+f.path for f in ctx.attr.deps[0].files.to_list()]))
-            cmd = cmd.replace("$(SRCS_COMMA)", ",".join(["$BUILD_WORKSPACE_DIRECTORY/"+f.path for f in ctx.attr.deps[0].files.to_list()]))
-        
-        cmd = cmd.replace("$@", "$BUILD_WORKSPACE_DIRECTORY/"+output.path)
         ctx.actions.write(output, cmd, is_executable=True)
         files = depset([output], transitive = [tool_deps] + [dep.files for dep in ctx.attr.deps])
 
