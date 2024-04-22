@@ -1,4 +1,4 @@
-load("@genrules_local//run:index.bzl", "run")
+load("@genrules//run:index.bzl", "run")
 
 def static(name, deps=[], output_directory="out", compile=True):
     run(
